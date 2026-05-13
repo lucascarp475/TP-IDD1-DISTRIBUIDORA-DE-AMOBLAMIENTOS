@@ -1,0 +1,93 @@
+create database tpgrupal
+go
+use tpgrupal
+go
+
+CREATE TABLE cliente(
+	Id_cliente INT PRIMARY KEY,
+	Nombre VARCHAR(50),
+	Apellido VARCHAR(50),
+	Email VARCHAR(50),
+	Telefono INT,
+	Direccion VARCHAR(50),
+	Medio_de_contacto VARCHAR(50)
+);
+
+CREATE TABLE asesor(
+	Id_asesor INT PRIMARY KEY,
+	Nombre VARCHAR(50),
+	Apellido VARCHAR(50),
+	Email VARCHAR(50),
+	Telefono INT
+);
+
+CREATE TABLE proyecto(
+	Id_proyecto INT PRIMARY KEY,
+	Id_cliente INT,
+	Id_asesor INT,
+	Fecha_de_inicio DATE,
+	Estado VARCHAR(50),
+	Monto INT,
+	Descuento INT,
+	Fecha_de_entrega DATE,
+	FOREIGN KEY (Id_cliente) REFERENCES cliente(Id_cliente),
+	FOREIGN KEY (Id_asesor) REFERENCES asesor(Id_asesor)
+);
+
+CREATE TABLE Interacción(
+	Id_interacción INT PRIMARY KEY,
+	Id_cliente INT,
+	Id_asesor INT,
+	Fecha DATE,
+	Medio VARCHAR(50),
+	Comentarios VARCHAR(50),
+	Estado_de_venta VARCHAR(50),
+	FOREIGN KEY (Id_cliente) REFERENCES cliente(Id_cliente),
+	FOREIGN KEY (Id_asesor) REFERENCES asesor(Id_asesor)
+);
+
+CREATE TABLE entrega(
+	Id_entrega INT PRIMARY KEY,
+	Id_proyecto INT,
+	Cantidad INT,
+	Observaciones_tecnicas VARCHAR(50),
+	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto)
+);
+
+CREATE TABLE encuesta(
+	Id_encuesta INT PRIMARY KEY,
+	Id_proyecto INT,
+	Fecha DATE,
+	Puntuación INT,
+	Comentarios VARCHAR(50),
+	Volveria_a_comprar VARCHAR(2),
+	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto)
+);
+
+CREATE TABLE documentación(
+	Id_documento INT PRIMARY KEY,
+	Id_proyecto INT,
+	Tipo VARCHAR(50),
+	Nombre_archivo VARCHAR(50),
+	Ruta VARCHAR(50),
+	Fecha_de_carga DATE,
+	FOREIGN KEY (id_proyecto) REFERENCES proyecto(Id_proyecto)
+);
+
+CREATE TABLE producto(
+	Id_producto INT PRIMARY KEY,
+	Nombre VARCHAR(50),
+	Categoria VARCHAR(50),
+	Marca VARCHAR(50),
+	Descripción VARCHAR(50),
+	Precio_unitario INT
+);
+
+CREATE TABLE detalle_proyecto(
+	Id_proyecto INT,
+	Id_producto INT,
+	Cantidad INT,
+	Observaciones_tecnicas VARCHAR(50),
+	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto),
+	FOREIGN KEY (Id_producto) REFERENCES producto(Id_producto)
+);
