@@ -104,6 +104,29 @@ CREATE TABLE detalle_proyecto(
 	FOREIGN KEY (Id_producto) REFERENCES producto(Id_producto)
 );
 
+-----ELIMINAR TILDES
+
+
+-- TABLA Interacción
+EXEC sp_rename 'Interacción', 'Interaccion';
+GO
+
+-- COLUMNA Id_interacción
+EXEC sp_rename 'Interaccion.Id_interacción', 'Id_interaccion', 'COLUMN';
+GO
+
+-- TABLA documentación
+EXEC sp_rename 'documentación', 'documentacion';
+GO
+
+-- COLUMNA Descripción en producto
+EXEC sp_rename 'producto.Descripción', 'Descripcion', 'COLUMN';
+GO
+
+-- COLUMNA Puntuación en encuesta
+EXEC sp_rename 'encuesta.Puntuación', 'Puntuacion', 'COLUMN';
+GO
+
 INSERT INTO cliente VALUES
 ('Juan','Perez','juanperez@gmail.com',1122334455,'Av. Rivadavia 1234','WhatsApp'),
 ('Maria','Lopez','marialopez@gmail.com',1133445566,'San Martin 456','Email'),
