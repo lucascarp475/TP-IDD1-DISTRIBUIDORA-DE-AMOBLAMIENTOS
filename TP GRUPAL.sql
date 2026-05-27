@@ -235,20 +235,25 @@ INSERT INTO documentación VALUES
 (90,'Factura','factura9.pdf','/docs/facturas','2026-04-05'),
 (100,'Presupuesto','presupuesto10.pdf','/docs/presupuestos','2026-04-10');
 
+select * from producto;
 -- =========================
 -- PRODUCTO
 -- =========================
-INSERT INTO producto VALUES
-('Gaseosa','Bebida','Coca Cola','Aun por vender',4000),
-('Caramelos','Golosina','Beldent','Aun por vender',2000),
-('Caja de chicles','Golosina','Beldent','Sin stock',2500),
-('Gaseosa','Bebida','Sprite','Aun por vender',4000),
-('Gaseosa','Bebida','Manaos','Sin stock',3500),
-('Gaseosa','Bebida','Fanta','Sin stock',4000),
-('Chocolate','Golosina','Coffler','Aun por vender',1500),
-('Alfajor','Golosina','Coffler','Aun por vender',2000),
-('Galletas','Golosina','Oreo','Sin stock',3000),
-('Galletas','Golosina','Formis','Sin stock',1000);
+
+insert into PRODUCTO
+(NOMBRE,CATEGORIA,MARCA,DESCRIPCION,PRECIO_UNITARIO)
+values
+('Bajo mesada Oslo','COCINA','Johnson','Mueble bajo mesada',450000),
+('Alacena Premium','COCINA','Johnson','Alacena blanca laqueada',320000),
+('Isla Central Nova','COCINA','Johnson','Isla moderna de cocina',780000),
+('Placard Verona','PLACARD','Reno','Placard corredizo 3 puertas',650000),
+('Vestidor Milano','PLACARD','Johnson','Vestidor modular completo',980000),
+('Placard Compact','PLACARD','Reno','Placard compacto juvenil',390000),
+('Horno Empotrable','ELECTRODOMESTICOS','Samsung','Horno electrico digital',850000),
+('Anafe Vitroceramico','ELECTRODOMESTICOS','Whirlpool','Anafe vitroceramico 4 hornallas',620000),
+('Campana Extractora','ELECTRODOMESTICOS','TST','Campana de acero inoxidable',410000),
+('Lavavajillas Smart','ELECTRODOMESTICOS','Bosch','Lavavajillas automatico',1100000);
+
 
 -- =========================
 -- DETALLE_PROYECTO
