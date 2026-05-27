@@ -276,6 +276,104 @@ SELECT*FROM documentación
 SELECT*FROM producto
 SELECT*FROM detalle_proyecto
 
+----FUNCION_CALCULAR----
+
+
+CREATE FUNCTION fn_CalcularMontoFinal
+(
+    @Monto DECIMAL(12,2),
+    @Descuento DECIMAL(12,2)
+)
+RETURNS DECIMAL(12,2)
+AS
+BEGIN
+
+    DECLARE @Resultado DECIMAL(12,2)
+
+    SET @Resultado =
+        @Monto - (@Monto * @Descuento / 100)
+
+    RETURN @Resultado
+
+END
+GO
+
+-- PROCEDURE CON TRY/CATCH
+---------------------------------------------------
+
+CREATE PROCEDURE sp_RegistrarProyecto
+(
+    @Id_cliente INT,
+    @Id_asesor INT,
+    @Monto DECIMAL(12,2),
+    @Descuento DECIMAL(12,2),
+    @Fecha_entrega DATE
+)
+AS
+BEGIN
+
+BEGIN TRY
+
+    BEGIN TRANSACTION
+
+    INSERT INTO proyecto
+    (
+        Id_cliente,
+        Id_asesor,
+        Fecha_de_inicio,
+        Estado,
+        Monto,
+        Descuento,
+        Fecha_de_entrega
+    )
+    VALUES
+    (
+        @Id_cliente,
+        @Id_asesor,
+        GETDATE(),
+        'Pendiente',
+        @Monto,
+        @Descuento,
+        @Fecha_entrega
+    )
+
+    COMMIT TRANSACTION
+
+    PRINT 'Proyecto registrado correctamente'
+
+END TRY
+
+BEGIN CATCH
+
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION
+
+    PRINT 'Error al registrar proyecto'
+
+    PRINT ERROR_MESSAGE()
+
+END CATCH
+
+END
+GO
+
+---------------------------------------------------
+-- PRUEBA DEL PROCEDURE
+---------------------------------------------------
+
+EXEC sp_RegistrarProyecto
+1,1,2500000,10,'2026-07-20'
+
+---------------------------------------------------
+-- PRUEBA DE LA FUNCTION
+---------------------------------------------------
+
+SELECT
+Id_proyecto,
+Monto,
+Descuento,
+dbo.fn_CalcularMontoFinal(Monto,Descuento) AS Monto_Final
+FROM proyecto;
 ---===========================================
 ---  CONSULTAS Y SUB CONSULTAS DE CLIENTE
 ---===========================================
