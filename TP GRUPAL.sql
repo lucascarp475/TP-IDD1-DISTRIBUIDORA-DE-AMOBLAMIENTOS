@@ -439,30 +439,3 @@ ORDER BY Nombre ASC;
 SELECT CONCAT_WS(' ',Nombre,Apellido,'vive en',Direccion) AS Direccion
 FROM cliente;
 
-----==========================----
-----VISTAS DE TIPO DE PRODUCTO----
-----==========================----
-
-----Bebidas---
-CREATE VIEW Bebidas AS
-SELECT Categoria,Marca
-FROM producto
-WHERE Categoria='Bebida'
-
-SELECT*FROM Bebidas
-
-----Golosinas---
-DROP VIEW Golosinas;
-
-CREATE VIEW Golosinas AS
-SELECT Categoria, Marca
-FROM producto
-WHERE Categoria='Golosina'
-
-SELECT*FROM Golosinas
-
----=============================----
----ORDEN DE CLIENTE POR ABCDARIO----
----=============================----
-
-
