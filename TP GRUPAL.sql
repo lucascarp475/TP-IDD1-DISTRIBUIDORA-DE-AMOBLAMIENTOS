@@ -187,8 +187,8 @@ INSERT INTO Interaccion VALUES
 (6,16,'2026-02-20','Email','Consulta tecnica','Interesado'),
 (7,17,'2026-03-02','Telefono','Confirma compra','Cerrada'),
 (8,18,'2026-03-10','WhatsApp','Solicita visita','Interesado'),
-(9,19,'2026-03-18','Email','Aprueba diseño','En negociacion'),
-(10,20,'2026-03-29','Presencial','Entrega señal','Cerrada');
+(9,19,'2026-03-18','Email','Aprueba diseï¿½o','En negociacion'),
+(10,20,'2026-03-29','Presencial','Entrega seï¿½al','Cerrada');
 
 
 -- =========================
@@ -215,7 +215,7 @@ INSERT INTO encuesta VALUES
 (50,'2026-04-20',8,'Buen resultado','SI'),
 (60,'2026-04-15',9,'Muy recomendable','SI'),
 (70,'2026-05-05',5,'Falta comunicacion','NO'),
-(80,'2026-05-30',8,'Muy buen diseño','SI'),
+(80,'2026-05-30',8,'Muy buen diseï¿½o','SI'),
 (90,'2026-05-18',10,'Todo perfecto','SI'),
 (100,'2026-06-05',7,'Buen trabajo','SI');
 
