@@ -7,30 +7,30 @@ go
 
 DROP TABLE entrega
 DROP TABLE encuesta
-DROP TABLE documentacion
+DROP TABLE documentaci贸n
 DROP TABLE detalle_proyecto
 DROP TABLE proyecto
-DROP TABLE Interaccion
+DROP TABLE Interacci贸n
 DROP TABLE producto
 DROP TABLE asesor
 DROP TABLE cliente
 
 CREATE TABLE cliente(
 	Id_cliente INT IDENTITY(1,1) PRIMARY KEY,
-	NombreC VARCHAR(50),
-	ApellidoC VARCHAR(50),
-	EmailC VARCHAR(50),
-	TelefonoC VARCHAR (20),
-	DireccionC VARCHAR(50),
+	Nombre VARCHAR(50),
+	Apellido VARCHAR(50),
+	Email VARCHAR(50),
+	Telefono INT,
+	Direccion VARCHAR(50),
 	Medio_de_contacto VARCHAR(50) CHECK (Medio_de_contacto IN('WhatsApp','Telefono','Email'))
 );
 
 CREATE TABLE asesor(
 	Id_asesor INT IDENTITY(11,1)PRIMARY KEY,
-	NombreA VARCHAR(50),
-	ApellidoA VARCHAR(50),
-	EmailA VARCHAR(50),
-	TelefonoA VARCHAR (20)
+	Nombre VARCHAR(50),
+	Apellido VARCHAR(50),
+	Email VARCHAR(50),
+	Telefono INT
 );
 
 CREATE TABLE proyecto(
@@ -39,52 +39,44 @@ CREATE TABLE proyecto(
 	Id_asesor INT,
 	Fecha_de_inicio DATE,
 	Estado VARCHAR(50) CHECK(Estado IN('Finalizado','Pendiente','En proceso')),
-	Monto DECIMAL(12,2),
-	Descuento DECIMAL(12,2),
+	Monto INT,
+	Descuento INT,
 	Fecha_de_entrega DATE,
 	FOREIGN KEY (Id_cliente) REFERENCES cliente(Id_cliente),
 	FOREIGN KEY (Id_asesor) REFERENCES asesor(Id_asesor)
 );
 
-CREATE TABLE Interaccion(
-	Id_interaccion INT IDENTITY(101,1)PRIMARY KEY,
+CREATE TABLE Interacci贸n(
+	Id_interacci贸n INT IDENTITY(101,1)PRIMARY KEY,
 	Id_cliente INT,
 	Id_asesor INT,
-	Fecha_Interaccion DATE,
+	Fecha DATE,
 	Medio VARCHAR(50),
 	Comentarios VARCHAR(50),
-	Estado_de_venta VARCHAR(50) CHECK(Estado_de_venta IN('Interesado','En negociacion','Pendiente','Cerrada')),
+	Estado_de_venta VARCHAR(50) CHECK(Estado_de_venta IN('Interesado','En negociacion','Interesado','Pendiente','Cerrada')),
 	FOREIGN KEY (Id_cliente) REFERENCES cliente(Id_cliente),
 	FOREIGN KEY (Id_asesor) REFERENCES asesor(Id_asesor)
 );
 
 CREATE TABLE entrega(
-	Id_entrega int identity (1,1) primary key,
+	Id_entrega INT IDENTITY(100,10)PRIMARY KEY,
 	Id_proyecto INT,
-	fecha_programada date,
-	fecha_real date,
-	direccion_entrega varchar (50),
-	estado varchar (50),
-	constraint chk_estado check (estado in ('Pendiente','Completada','Cancelada')),
+	Cantidad INT,
+	Observaciones_tecnicas VARCHAR(50),
 	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto)
 );
-ALTER TABLE Entrega
-ADD CONSTRAINT CHK_Entrega_Fechas
-CHECK (Fecha_real IS NULL OR Fecha_real >= Fecha_programada);
-
 
 CREATE TABLE encuesta(
 	Id_encuesta INT IDENTITY(1,1)PRIMARY KEY,
 	Id_proyecto INT,
-	Fecha_encuesta DATE,
-	Puntuacion INT,
+	Fecha DATE,
+	Puntuaci贸n INT,
 	Comentarios VARCHAR(50),
 	Volveria_a_comprar VARCHAR(2) CHECK(Volveria_a_comprar IN('SI','NO')),
-	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto),
-	CONSTRAINT CHK_Encuesta_Puntuacion CHECK (Puntuacion BETWEEN 1 AND 10)
+	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto)
 );
 
-CREATE TABLE documentacion(
+CREATE TABLE documentaci贸n(
 	Id_documento INT IDENTITY(11,1)PRIMARY KEY,
 	Id_proyecto INT,
 	Tipo VARCHAR(50),
@@ -96,11 +88,11 @@ CREATE TABLE documentacion(
 
 CREATE TABLE producto(
 	Id_producto INT IDENTITY(1001,1) PRIMARY KEY,
-	NombreP VARCHAR(50),
+	Nombre VARCHAR(50),
 	Categoria VARCHAR(50),
 	Marca VARCHAR(50),
-	Descripcion VARCHAR(50),
-	Precio_unitario decimal (12,2)
+	Descripci贸n VARCHAR(50),
+	Precio_unitario INT
 );
 
 CREATE TABLE detalle_proyecto(
@@ -108,56 +100,61 @@ CREATE TABLE detalle_proyecto(
 	Id_producto INT,
 	Cantidad INT,
 	Observaciones_tecnicas VARCHAR(50),
-	CONSTRAINT PK_Detalle_Proyecto PRIMARY KEY (Id_proyecto, Id_producto),
-	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto), 
-	FOREIGN KEY (Id_producto) REFERENCES producto(Id_producto),
-	CONSTRAINT CHK_Detalle_Cantidad CHECK (Cantidad > 0)
+	FOREIGN KEY (Id_proyecto) REFERENCES proyecto(Id_proyecto),
+	FOREIGN KEY (Id_producto) REFERENCES producto(Id_producto)
 );
 
---------INSERTADO DE DATOS----
-INSERT INTO cliente
-(Nombre, Apellido, Email, Telefono, Direccion, Medio_de_contacto)
-VALUES
-('Martina','Gomez','martina.gomez@gmail.com',1123456789,'Av Santa Fe 2450','Instagram'),
-('Ricardo','Perez','ricardo.perez@gmail.com',1134567890,'Cabildo 1550','Showroom'),
-('Lucia','Fernandez','lucia.fernandez@gmail.com',1145678901,'Libertador 3300','Referido'),
-('Andres','Lopez','andres.lopez@gmail.com',1156789012,'Maipu 890','Facebook'),
-('Sofia','Martinez','sofia.martinez@gmail.com',1167890123,'Parana 1200','Mail');
+-----ELIMINAR TILDES
+
+
+-- TABLA Interacci贸n
+EXEC sp_rename 'Interacci贸n', 'Interaccion';
+GO
+
+-- COLUMNA Id_interacci贸n
+EXEC sp_rename 'Interaccion.Id_interacci贸n', 'Id_interaccion', 'COLUMN';
+GO
+
+-- TABLA documentaci贸n
+EXEC sp_rename 'documentaci贸n', 'documentacion';
+GO
+
+-- COLUMNA Descripci贸n en producto
+EXEC sp_rename 'producto.Descripci贸n', 'Descripcion', 'COLUMN';
+GO
+
+-- COLUMNA Puntuaci贸n en encuesta
+EXEC sp_rename 'encuesta.Puntuaci贸n', 'Puntuacion', 'COLUMN';
+GO
+
+INSERT INTO cliente VALUES
+('Juan','Perez','juanperez@gmail.com',1122334455,'Av. Rivadavia 1234','WhatsApp'),
+('Maria','Lopez','marialopez@gmail.com',1133445566,'San Martin 456','Email'),
+('Carlos','Gomez','carlosgomez@gmail.com',1144556677,'Belgrano 789','Telefono'),
+('Lucia','Fernandez','luciaf@gmail.com',1155667788,'Cabildo 321','WhatsApp'),
+('Martin','Diaz','martind@gmail.com',1166778899,'Mitre 654','Email'),
+('Ana','Torres','anatorres@gmail.com',1177889900,'Corrientes 100','Telefono'),
+('Pedro','Ruiz','pedror@gmail.com',1188990011,'Lavalle 555','WhatsApp'),
+('Sabrina','Mendez','smendez@gmail.com',1199001122,'Callao 890','Email'),
+('Federico','Castro','fcastro@gmail.com',1111222233,'Santa Fe 742','Telefono'),
+('Julieta','Silva','julietas@gmail.com',1122446688,'Pueyrredon 999','WhatsApp');
+
 
 -- =========================
 -- ASESORES
+-- =========================
+INSERT INTO asesor VALUES
+('Sofia','Ramirez','sramirez@empresa.com',1177000001),
+('Diego','Martinez','dmartinez@empresa.com',1177000002),
+('Valentina','Suarez','vsuarez@empresa.com',1177000003),
+('Nicolas','Herrera','nherrera@empresa.com',1177000004),
+('Camila','Romero','cromero@empresa.com',1177000005),
+('Lucas','Vega','lvega@empresa.com',1177000006),
+('Martina','Rojas','mrojas@empresa.com',1177000007),
+('Tomas','Navarro','tnavarro@empresa.com',1177000008),
+('Florencia','Acosta','facosta@empresa.com',1177000009),
+('Ivan','Medina','imedina@empresa.com',1177000010);
 
-CREATE sp_RegistrarAsesor
-(
-    @Nombre VARCHAR(50),
-    @Apellido VARCHAR(50),
-    @Email VARCHAR(50),
-    @Telefono VARCHAR(20)
-)
-AS
-BEGIN
-    BEGIN TRY
-        BEGIN TRANSACTION;
-
-        INSERT INTO asesor
-        (Nombre, Apellido, Email, Telefono)
-        VALUES
-        (@Nombre, @Apellido, @Email, @Telefono);
-
-        COMMIT TRANSACTION;
-
-        PRINT 'Asesor registrado correctamente';
-    END TRY
-
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
-
-        PRINT 'Error al registrar asesor';
-        PRINT ERROR_MESSAGE();
-    END CATCH
-END;
-GO
 
 -- =========================
 -- PROYECTOS
@@ -178,7 +175,7 @@ INSERT INTO proyecto VALUES
 -- =========================
 -- INTERACCIONES
 -- =========================
-INSERT INTO Interaccion VALUES
+INSERT INTO Interacci贸n VALUES
 (1,11,'2026-01-05','WhatsApp','Consulta inicial','Interesado'),
 (2,12,'2026-01-08','Email','Envio presupuesto','En negociacion'),
 (3,13,'2026-01-15','Telefono','Consulta cocina','Interesado'),
@@ -187,21 +184,24 @@ INSERT INTO Interaccion VALUES
 (6,16,'2026-02-20','Email','Consulta tecnica','Interesado'),
 (7,17,'2026-03-02','Telefono','Confirma compra','Cerrada'),
 (8,18,'2026-03-10','WhatsApp','Solicita visita','Interesado'),
-(9,19,'2026-03-18','Email','Aprueba dise駉','En negociacion'),
-(10,20,'2026-03-29','Presencial','Entrega se馻l','Cerrada');
+(9,19,'2026-03-18','Email','Aprueba dise帽o','En negociacion'),
+(10,20,'2026-03-29','Presencial','Entrega se帽al','Cerrada');
 
 
 -- =========================
 -- ENTREGAS
 -- =========================
-INSERT INTO entrega
-(Id_proyecto, fecha_programada, fecha_real, direccion, estado)
-VALUES
-(1,'2025-07-15',NULL,'Av Santa Fe 2450','Pendiente'),
-(2,'2025-08-01',NULL,'Cabildo 1550','Pendiente'),
-(3,'2025-08-10',NULL,'Libertador 3300','Pendiente'),
-(4,'2025-07-30','2025-07-30','Maipu 890','Completada'),
-(5,'2025-08-20','2025-08-21','Parana 1200','Completada');
+INSERT INTO entrega VALUES
+(10,3,'Entrega completa'),
+(20,2,'Falta instalacion'),
+(30,1,'Pendiente aprobacion'),
+(40,4,'Sin observaciones'),
+(50,2,'Demora por proveedor'),
+(60,3,'Entrega parcial'),
+(70,1,'Pendiente'),
+(80,5,'Instalacion programada'),
+(90,4,'Entrega correcta'),
+(100,2,'Requiere ajuste');
 
 
 -- =========================
@@ -215,7 +215,7 @@ INSERT INTO encuesta VALUES
 (50,'2026-04-20',8,'Buen resultado','SI'),
 (60,'2026-04-15',9,'Muy recomendable','SI'),
 (70,'2026-05-05',5,'Falta comunicacion','NO'),
-(80,'2026-05-30',8,'Muy buen dise駉','SI'),
+(80,'2026-05-30',8,'Muy buen dise帽o','SI'),
 (90,'2026-05-18',10,'Todo perfecto','SI'),
 (100,'2026-06-05',7,'Buen trabajo','SI');
 
@@ -223,7 +223,7 @@ INSERT INTO encuesta VALUES
 -- =========================
 -- DOCUMENTACION
 -- =========================
-INSERT INTO documentacion VALUES
+INSERT INTO documentaci贸n VALUES
 (10,'Contrato','contrato1.pdf','/docs/contratos','2026-01-09'),
 (20,'Plano','plano2.pdf','/docs/planos','2026-01-18'),
 (30,'Render','render3.jpg','/docs/renders','2026-02-01'),
@@ -274,10 +274,10 @@ INSERT INTO detalle_proyecto VALUES
 SELECT*FROM cliente
 SELECT*FROM asesor
 SELECT*FROM proyecto
-SELECT*FROM Interaccion
+SELECT*FROM Interacci贸n
 SELECT*FROM entrega
 SELECT*FROM encuesta
-SELECT*FROM documentacion
+SELECT*FROM documentaci贸n
 SELECT*FROM producto
 SELECT*FROM detalle_proyecto
 
@@ -434,7 +434,7 @@ SELECT*
 FROM orden
 ORDER BY Nombre ASC;
 
-----DIRECCION EN ORACIONES-----
+----DIRECCI脫N EN ORACIONES-----
 
 SELECT CONCAT_WS(' ',Nombre,Apellido,'vive en',Direccion) AS Direccion
 FROM cliente;
@@ -443,23 +443,7 @@ FROM cliente;
 ----VISTAS DE TIPO DE PRODUCTO----
 ----==========================----
 
-----Bebidas---
-CREATE VIEW Bebidas AS
-SELECT Categoria,Marca
-FROM producto
-WHERE Categoria='Bebida'
 
-SELECT*FROM Bebidas
-
-----Golosinas---
-DROP VIEW Golosinas;
-
-CREATE VIEW Golosinas AS
-SELECT Categoria, Marca
-FROM producto
-WHERE Categoria='Golosina'
-
-SELECT*FROM Golosinas
 
 ---=============================----
 ---ORDEN DE CLIENTE POR ABCDARIO----
