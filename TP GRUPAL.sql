@@ -20,7 +20,7 @@ CREATE TABLE cliente(
 	Id_cliente INT IDENTITY(1,1) PRIMARY KEY,
 	NombreC VARCHAR(50),
 	ApellidoC VARCHAR(50),
-	EmailC VARCHAR(50),
+	EmailC VARCHAR(50) UNIQUE,
 	TelefonoC VARCHAR (20),
 	DireccionC VARCHAR(50),
 	Medio_de_contacto VARCHAR(50) CHECK (Medio_de_contacto IN('WhatsApp','Telefono','Email'))
@@ -30,7 +30,7 @@ CREATE TABLE asesor(
 	Id_asesor INT IDENTITY(11,1)PRIMARY KEY,
 	NombreA VARCHAR(50),
 	ApellidoA VARCHAR(50),
-	EmailA VARCHAR(50),
+	EmailA VARCHAR(50) UNIQUE,
 	TelefonoA VARCHAR (20)
 );
 
@@ -41,10 +41,11 @@ CREATE TABLE proyecto(
 	Fecha_de_inicio DATE,
 	Estado VARCHAR(50) CHECK(Estado IN('Finalizado','Pendiente','En proceso')),
 	Monto DECIMAL(12,2),
-	Descuento DECIMAL(12,2),
+	Descuento DECIMAL(5,2),
 	Fecha_de_entrega DATE,
 	FOREIGN KEY (Id_cliente) REFERENCES cliente(Id_cliente),
-	FOREIGN KEY (Id_asesor) REFERENCES asesor(Id_asesor)
+	FOREIGN KEY (Id_asesor) REFERENCES asesor(Id_asesor),
+    CONSTRAINT CHK_Proyecto_Descuento CHECK (Descuento BETWEEN 0 AND 100)
 );
 
 CREATE TABLE Interaccion(
@@ -123,7 +124,7 @@ CREATE PROCEDURE AgregarCliente
 	@Nombre VARCHAR(50),
 	@Apellido VARCHAR(50),
 	@Email VARCHAR(50),
-	@Telefono INT,
+	@Telefono varchar(20),
 	@Direccion VARCHAR(50),
 	@Medio_de_contacto VARCHAR(50)
 AS
@@ -137,7 +138,7 @@ EXEC AgregarCliente
 'Juan',
 'Perez',
 'juan@gmail.com',
-11223344,
+'11223344',
 'Av Rivadavia 123',
 'WhatsApp';
 
@@ -145,7 +146,7 @@ EXEC AgregarCliente
 'Maria',
 'Lopez',
 'marialopez@gmail.com',
-1133445566,
+'1133445566',
 'San Martin 456',
 'WhatsApp';
 
@@ -153,7 +154,7 @@ EXEC AgregarCliente
 'Carlos',
 'Gomez',
 'carlosgomez@hotmail.com',
-1144556677,
+'1144556677',
 'Belgrano 789',
 'Telefono';
 
@@ -161,7 +162,7 @@ EXEC AgregarCliente
 'Lucia',
 'Fernandez',
 'luciaf@gmail.com',
-1155667788,
+'1155667788',
 'Cabildo 321',
 'WhatsApp';
 
@@ -169,10 +170,9 @@ EXEC AgregarCliente
 'Martin',
 'Diaz',
 'martind@hotmail.com',
-1166778899,
+'1166778899',
 'Mitre 654',
 'Email';
-
 SELECT*FROM cliente
 
 
@@ -250,14 +250,14 @@ select * from asesor;
 -- =========================
 DROP PROCEDURE IF EXISTS sp_RegistrarProyecto;
 GO
-DBCC CHECKIDENT ('proyecto', RESEED, 0);
+
 
 CREATE PROCEDURE sp_RegistrarProyecto
 (
     @Id_cliente INT,
     @Id_asesor INT,
     @Monto DECIMAL(12,2),
-    @Descuento DECIMAL(12,2),
+    @Descuento DECIMAL(5,2),
     @Fecha_entrega DATE
 )
 AS
@@ -320,28 +320,28 @@ EXEC sp_RegistrarProyecto
     @Id_cliente = 2,
     @Id_asesor = 12,
     @Monto = 1430000,
-    @Descuento = 50000,
+    @Descuento = 5,
     @Fecha_entrega = '2026-08-01';
 
 EXEC sp_RegistrarProyecto
     @Id_cliente = 3,
     @Id_asesor = 11,
     @Monto = 1750000,
-    @Descuento = 100000,
+    @Descuento = 10,
     @Fecha_entrega = '2026-08-10';
 
 EXEC sp_RegistrarProyecto
     @Id_cliente = 4,
     @Id_asesor = 13,
     @Monto = 1470000,
-    @Descuento = 70000,
+    @Descuento = 7,
     @Fecha_entrega = '2026-07-30';
 
 EXEC sp_RegistrarProyecto
     @Id_cliente = 5,
     @Id_asesor = 12,
     @Monto = 1950000,
-    @Descuento = 150000,
+    @Descuento = 15,
     @Fecha_entrega = '2026-08-20';
 SELECT*FROM proyecto
 
@@ -404,14 +404,40 @@ BEGIN
 
 END;
 
-INSERT INTO entrega
-(Id_proyecto, fecha_programada, fecha_real, direccion_entrega, estado)
-VALUES
-(10, '2026-07-10', NULL, 'Av Rivadavia 123', 'Pendiente'),
-(20, '2026-07-25', NULL, 'San Martin 456', 'Pendiente'),
-(30, '2026-08-05', NULL, 'Belgrano 789', 'Pendiente'),
-(40, '2026-07-28', '2026-07-30', 'Cabildo 321', 'Completada'),
-(50, '2026-08-18', '2026-08-20', 'Mitre 654', 'Completada');
+EXEC AgregarEntrega
+    10,
+    '2026-07-10',
+    NULL,
+    'Av Rivadavia 123',
+    'Pendiente';
+
+EXEC AgregarEntrega
+    20,
+    '2026-07-25',
+    NULL,
+    'San Martin 456',
+    'Pendiente';
+
+EXEC AgregarEntrega
+    30,
+    '2026-08-05',
+    NULL,
+    'Belgrano 789',
+    'Pendiente';
+
+EXEC AgregarEntrega
+    40,
+    '2026-07-28',
+    '2026-07-30',
+    'Cabildo 321',
+    'Completada';
+
+EXEC AgregarEntrega
+    50,
+    '2026-08-18',
+    '2026-08-20',
+    'Mitre 654',
+    'Completada';
 
 
 
@@ -437,13 +463,19 @@ BEGIN
 
 END;
 
-INSERT INTO encuesta
-(Id_proyecto, Fecha_encuesta, Puntuacion, Comentarios, Volveria_a_comprar)
-VALUES
-(40, '2026-08-02', 9, 'Muy conforme con la instalacion', 'SI'),
+EXEC AgregarEncuesta
+    40,
+    '2026-08-02',
+    9,
+    'Muy conforme con la instalacion',
+    'SI';
 
-(50, '2026-08-25', 10, 'Excelente atencion y calidad', 'SI');
-
+EXEC AgregarEncuesta
+    50,
+    '2026-08-25',
+    10,
+    'Excelente atencion y calidad',
+    'SI';
 
 SELECT*FROM encuesta
 
@@ -573,6 +605,7 @@ GO
 EXEC sp_RegistrarProyecto
 1,1,2500000,10,'2026-07-20'
 
+select * from proyecto;
 ---------------------------------------------------
 -- PRUEBA DE LA FUNCTION
 ---------------------------------------------------
@@ -783,3 +816,18 @@ WHERE Monto >
     FROM proyecto AS p2
     WHERE p1.Id_asesor = p2.Id_asesor
 );
+
+
+SELECT
+    p.Id_proyecto,
+    c.NombreC,
+    a.NombreA,
+    p.Estado,
+    p.Monto,
+    p.Descuento,
+    dbo.fn_CalcularMontoFinal(p.Monto, p.Descuento) AS Monto_Final
+FROM proyecto p
+JOIN cliente c
+    ON p.Id_cliente = c.Id_cliente
+JOIN asesor a
+    ON p.Id_asesor = a.Id_asesor;
