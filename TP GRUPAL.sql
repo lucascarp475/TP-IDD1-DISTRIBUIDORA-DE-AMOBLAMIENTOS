@@ -689,13 +689,14 @@ JOIN producto AS pr
 
 
 -- CONSULTAS CON GROUP BY:
-
+-- Cantidad de proyectos agrupados por estado
 SELECT
     Estado,
     COUNT(*) AS Cantidad_Proyectos
 FROM proyecto
 GROUP BY Estado;
 
+-- Cantidad de clientes según su medio de contacto preferido
 
 SELECT
     Medio_de_contacto,
@@ -703,21 +704,21 @@ SELECT
 FROM cliente
 GROUP BY Medio_de_contacto;
 
+-- Cantidad de proyectos asignados a cada asesor
 
 SELECT
     Id_asesor,
     COUNT(*) AS Cantidad_Proyectos
 FROM proyecto
 GROUP BY Id_asesor;
-
-
+-- Monto total vendido por cada asesor
 SELECT
     Id_asesor,
     SUM(Monto) AS Total_Vendido
 FROM proyecto
 GROUP BY Id_asesor;
 
-
+-- Cantidad de documentos registrados por tipo
 SELECT
     Tipo,
     COUNT(*) AS Cantidad_Documentos
@@ -831,3 +832,181 @@ JOIN cliente c
     ON p.Id_cliente = c.Id_cliente
 JOIN asesor a
     ON p.Id_asesor = a.Id_asesor;
+
+
+------------VISTAS----
+--- VISTA 1: Proyectos con cliente y asesor----
+
+CREATE VIEW vw_Proyectos_Detalle AS
+SELECT
+    p.Id_proyecto,
+    c.NombreC + ' ' + c.ApellidoC AS Cliente,
+    a.NombreA + ' ' + a.ApellidoA AS Asesor,
+    p.Fecha_de_inicio,
+    p.Estado,
+    p.Monto,
+    p.Descuento,
+    dbo.fn_CalcularMontoFinal(p.Monto, p.Descuento) AS Monto_Final,
+    p.Fecha_de_entrega
+FROM proyecto p
+JOIN cliente c ON p.Id_cliente = c.Id_cliente
+JOIN asesor a ON p.Id_asesor = a.Id_asesor;
+GO
+-- VISTA 2: Entregas con datos del proyecto y cliente
+CREATE VIEW vw_Entregas_Proyecto AS
+SELECT
+    e.Id_entrega,
+    p.Id_proyecto,
+    c.NombreC + ' ' + c.ApellidoC AS Cliente,
+    e.fecha_programada,
+    e.fecha_real,
+    e.direccion_entrega,
+    e.estado AS Estado_Entrega,
+    p.Estado AS Estado_Proyecto
+FROM entrega e
+JOIN proyecto p ON e.Id_proyecto = p.Id_proyecto
+JOIN cliente c ON p.Id_cliente = c.Id_cliente;
+GO
+
+-- VISTA 3: Encuestas de satisfacción
+CREATE VIEW vw_Satisfaccion_Clientes AS
+SELECT
+    en.Id_encuesta,
+    p.Id_proyecto,
+    c.NombreC + ' ' + c.ApellidoC AS Cliente,
+    en.Fecha_encuesta,
+    en.Puntuacion,
+    en.Comentarios,
+    en.Volveria_a_comprar
+FROM encuesta en
+JOIN proyecto p ON en.Id_proyecto = p.Id_proyecto
+JOIN cliente c ON p.Id_cliente = c.Id_cliente;
+GO
+
+
+-- VISTA 4: Detalle de productos por proyecto
+CREATE VIEW vw_Detalle_Productos_Proyecto AS
+SELECT
+    p.Id_proyecto,
+    c.NombreC + ' ' + c.ApellidoC AS Cliente,
+    pr.NombreP AS Producto,
+    pr.Categoria,
+    pr.Marca,
+    dp.Cantidad,
+    pr.Precio_unitario,
+    dp.Observaciones_tecnicas
+FROM detalle_proyecto dp
+JOIN proyecto p ON dp.Id_proyecto = p.Id_proyecto
+JOIN cliente c ON p.Id_cliente = c.Id_cliente
+JOIN producto pr ON dp.Id_producto = pr.Id_producto;
+GO
+
+
+-- VISTA 5: Resumen de ventas por asesor
+CREATE VIEW vw_Ventas_Por_Asesor AS
+SELECT
+    a.Id_asesor,
+    a.NombreA + ' ' + a.ApellidoA AS Asesor,
+    COUNT(p.Id_proyecto) AS Cantidad_Proyectos,
+    SUM(p.Monto) AS Total_Bruto,
+    SUM(dbo.fn_CalcularMontoFinal(p.Monto, p.Descuento)) AS Total_Final
+FROM asesor a
+JOIN proyecto p ON a.Id_asesor = p.Id_asesor
+GROUP BY a.Id_asesor, a.NombreA, a.ApellidoA;
+GO
+
+SELECT * FROM vw_Proyectos_Detalle;
+SELECT * FROM vw_Entregas_Proyecto;
+SELECT * FROM vw_Satisfaccion_Clientes;
+SELECT * FROM vw_Detalle_Productos_Proyecto;
+SELECT * FROM vw_Ventas_Por_Asesor;
+
+
+
+----INSERCION COMPLEJA 
+CREATE PROCEDURE sp_RegistrarProyectoCompleto
+    @Id_cliente INT,
+    @Id_asesor INT,
+    @Monto DECIMAL(12,2),
+    @Descuento DECIMAL(12,2),
+    @Fecha_entrega DATE,
+    @Medio VARCHAR(50),
+    @Comentario VARCHAR(50)
+AS
+BEGIN
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        INSERT INTO proyecto
+        (Id_cliente, Id_asesor, Fecha_de_inicio, Estado, Monto, Descuento, Fecha_de_entrega)
+        VALUES
+        (@Id_cliente, @Id_asesor, GETDATE(), 'Pendiente', @Monto, @Descuento, @Fecha_entrega);
+
+        INSERT INTO Interaccion
+        (Id_cliente, Id_asesor, Fecha_Interaccion, Medio, Comentarios, Estado_de_venta)
+        VALUES
+        (@Id_cliente, @Id_asesor, GETDATE(), @Medio, @Comentario, 'Pendiente');
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        PRINT ERROR_MESSAGE();
+    END CATCH
+END;
+GO
+
+
+EXEC sp_RegistrarProyectoCompleto
+    @Id_cliente = 1,
+    @Id_asesor = 11,
+    @Monto = 1250000,
+    @Descuento = 10,
+    @Fecha_entrega = '2026-09-10',
+    @Medio = 'WhatsApp',
+    @Comentario = 'Nuevo proyecto cocina integral';
+
+EXEC sp_RegistrarProyectoCompleto
+    @Id_cliente = 2,
+    @Id_asesor = 12,
+    @Monto = 980000,
+    @Descuento = 5,
+    @Fecha_entrega = '2026-09-18',
+    @Medio = 'Email',
+    @Comentario = 'Cliente solicita presupuesto';
+
+EXEC sp_RegistrarProyectoCompleto
+    @Id_cliente = 3,
+    @Id_asesor = 13,
+    @Monto = 1650000,
+    @Descuento = 15,
+    @Fecha_entrega = '2026-10-05',
+    @Medio = 'Telefono',
+    @Comentario = 'Consulta por placard y vestidor';
+
+
+    SELECT * FROM proyecto;
+SELECT * FROM Interaccion;
+
+---- Consulta parametrizada de entregas
+
+CREATE PROCEDURE sp_EntregasPorEstado
+    @Estado VARCHAR(50)
+AS
+BEGIN
+    SELECT
+        e.Id_entrega,
+        e.Id_proyecto,
+        e.fecha_programada,
+        e.fecha_real,
+        e.direccion_entrega,
+        e.estado
+    FROM entrega e
+    WHERE e.estado = @Estado;
+END;
+GO
+
+EXEC sp_EntregasPorEstado 'Pendiente';
+EXEC sp_EntregasPorEstado 'Completada';
