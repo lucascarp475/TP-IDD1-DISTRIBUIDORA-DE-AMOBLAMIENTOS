@@ -45,7 +45,8 @@ CREATE TABLE proyecto(
 	Fecha_de_entrega DATE,
 	FOREIGN KEY (Id_cliente) REFERENCES cliente(Id_cliente),
 	FOREIGN KEY (Id_asesor) REFERENCES asesor(Id_asesor),
-    CONSTRAINT CHK_Proyecto_Descuento CHECK (Descuento BETWEEN 0 AND 100)
+    CONSTRAINT CHK_Proyecto_Descuento CHECK (Descuento BETWEEN 0 AND 100),
+    CONSTRAINT CHK_Proyecto_Monto CHECK (Monto > 0)
 );
 
 CREATE TABLE Interaccion(
@@ -102,7 +103,8 @@ CREATE TABLE producto(
 	Categoria VARCHAR(50),
 	Marca VARCHAR(50),
 	Descripcion VARCHAR(50),
-	Precio_unitario decimal (12,2)
+	Precio_unitario decimal (12,2),
+    CONSTRAINT CHK_Producto_Categoria CHECK (Categoria IN ('COCINA','PLACARD','ELECTRODOMESTICOS'))
 );
 
 CREATE TABLE detalle_proyecto(
@@ -928,7 +930,7 @@ CREATE PROCEDURE sp_RegistrarProyectoCompleto
     @Id_cliente INT,
     @Id_asesor INT,
     @Monto DECIMAL(12,2),
-    @Descuento DECIMAL(12,2),
+    @Descuento DECIMAL(5,2),
     @Fecha_entrega DATE,
     @Medio VARCHAR(50),
     @Comentario VARCHAR(50)
@@ -1010,3 +1012,82 @@ GO
 
 EXEC sp_EntregasPorEstado 'Pendiente';
 EXEC sp_EntregasPorEstado 'Completada';
+
+---TRIGGERS
+
+DROP TRIGGER IF EXISTS trg_ValidarEncuesta;
+GO
+
+CREATE TRIGGER trg_ValidarEncuesta
+ON encuesta
+INSTEAD OF INSERT
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        JOIN proyecto p ON i.Id_proyecto = p.Id_proyecto
+        WHERE p.Estado <> 'Finalizado'
+    )
+    BEGIN
+        RAISERROR('Solo se puede encuestar proyectos finalizados.', 16, 1);
+        RETURN;
+    END;
+
+    INSERT INTO encuesta 
+    (Id_proyecto, Fecha_encuesta, Puntuacion, Comentarios, Volveria_a_comprar)
+    SELECT 
+        Id_proyecto, Fecha_encuesta, Puntuacion, Comentarios, Volveria_a_comprar
+    FROM inserted;
+END;
+GO
+
+
+DROP TRIGGER IF EXISTS trg_FinalizarProyectoAlCompletarEntrega;
+GO
+
+CREATE TRIGGER trg_FinalizarProyectoAlCompletarEntrega
+ON entrega
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    UPDATE p
+    SET p.Estado = 'Finalizado'
+    FROM proyecto p
+    JOIN inserted i 
+        ON p.Id_proyecto = i.Id_proyecto
+    WHERE i.estado = 'Completada'
+      AND i.fecha_real IS NOT NULL;
+END;
+GO
+
+UPDATE entrega
+SET estado = 'Completada',
+    fecha_real = '2026-07-10'
+WHERE Id_proyecto = 10;
+
+DROP TRIGGER IF EXISTS trg_ValidarEntregaCompletada;
+GO
+----sirve para impedir que una entrega se marque como Completada sin fecha_real
+CREATE TRIGGER trg_ValidarEntregaCompletada
+ON entrega
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM inserted
+        WHERE estado = 'Completada'
+          AND fecha_real IS NULL
+    )
+    BEGIN
+        RAISERROR('Una entrega completada debe tener fecha real.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+
+
+select *from entrega;
+select *from proyecto;
+
