@@ -177,21 +177,21 @@ SELECT*FROM cliente
 
 -- =========================
 -- ASESORES
-
-CREATE sp_RegistrarAsesor
-(
+DROP PROCEDURE IF EXISTS sp_RegistrarAsesor;
+GO
+CREATE PROCEDURE sp_RegistrarAsesor
     @Nombre VARCHAR(50),
     @Apellido VARCHAR(50),
     @Email VARCHAR(50),
     @Telefono VARCHAR(20)
-)
+
 AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
         INSERT INTO asesor
-        (Nombre, Apellido, Email, Telefono)
+        (NombreA, ApellidoA, EmailA, TelefonoA)
         VALUES
         (@Nombre, @Apellido, @Email, @Telefono);
 
@@ -435,7 +435,8 @@ SELECT*FROM detalle_proyecto
 
 
 ----FUNCION_CALCULAR----
-
+DROP FUNCTION IF EXISTS fn_CalcularMontoFinal
+GO
 
 CREATE FUNCTION fn_CalcularMontoFinal
 (
@@ -537,21 +538,21 @@ FROM proyecto;
 ---===========================================
 
 ---TELEFONO, GMAIL Y WHATSAPP---
-DROP TABLE telefonos;
+DROP TABLE IF EXISTS telefonos;
 
 SELECT*
 INTO telefonos
 FROM cliente
 WHERE Medio_de_contacto='Telefono';
 
-DROP TABLE WhatsApp;
+DROP TABLE IF EXISTS WhatsApp;
 
 SELECT*
 INTO WhatsApp
 FROM cliente
 WHERE Medio_de_contacto='WhatsApp';
 
-DROP TABLE Email;
+DROP TABLE IF EXISTS Email;
 
 SELECT*
 INTO Email
@@ -564,31 +565,31 @@ SELECT*FROM Email
 
 ----ID MAS ALTO Y MAS BAJO----
 
-SELECT Nombre, Apellido
+SELECT NombreC, ApellidoC
 FROM cliente
 WHERE Id_cliente=(
 	SELECT Max(Id_cliente)
 	FROM cliente);
 
-SELECT Nombre, Apellido
+SELECT NombreC, ApellidoC
 FROM cliente
 WHERE Id_cliente=(
 	SELECT Min(Id_cliente)
 	FROM cliente);
 
 ----ORDEN ALFABETICO----
-DROP TABLE orden;
+DROP TABLE IF EXISTS orden;
 
-SELECT Nombre,Apellido,Telefono
+SELECT NombreC,ApellidoC,TelefonoC
 INTO orden
 FROM cliente;
 
 SELECT*
 FROM orden
-ORDER BY Nombre ASC;
+ORDER BY NombreC ASC;
 
 ----DIRECCION EN ORACIONES-----
 
-SELECT CONCAT_WS(' ',Nombre,Apellido,'vive en',Direccion) AS Direccion
+SELECT CONCAT_WS(' ',NombreC,ApellidoC,'vive en',DireccionC) AS Direccion
 FROM cliente;
 
