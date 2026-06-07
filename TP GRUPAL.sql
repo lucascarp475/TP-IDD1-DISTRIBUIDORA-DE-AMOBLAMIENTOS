@@ -175,6 +175,7 @@ EXEC AgregarCliente
 
 SELECT*FROM cliente
 
+
 -- =========================
 -- ASESORES
 DROP PROCEDURE IF EXISTS sp_RegistrarAsesor;
@@ -210,38 +211,144 @@ BEGIN
 END;
 GO
 
+EXEC sp_RegistrarAsesor
+    @Nombre = 'Carlos',
+    @Apellido = 'Ramirez',
+    @Email = 'carlos.ramirez@gaudir.com',
+    @Telefono = '1122233344';
+
+EXEC sp_RegistrarAsesor
+    @Nombre = 'Valeria',
+    @Apellido = 'Sosa',
+    @Email = 'valeria.sosa@gaudir.com',
+    @Telefono = '1133344455';
+
+EXEC sp_RegistrarAsesor
+    @Nombre = 'Federico',
+    @Apellido = 'Molina',
+    @Email = 'federico.molina@gaudir.com',
+    @Telefono = '1144455566';
+
+
+EXEC sp_RegistrarAsesor
+    @Nombre = 'Luciana',
+    @Apellido = 'Perez',
+    @Email = 'luciana.perez@gaudir.com',
+    @Telefono = '1155566677';
+
+
+EXEC sp_RegistrarAsesor
+    @Nombre = 'Martin',
+    @Apellido = 'Gutierrez',
+    @Email = 'martin.gutierrez@gaudir.com',
+    @Telefono = '1166677788';
+
+
+select * from asesor;
 -- =========================
 -- PROYECTOS
 -- =========================
-DROP PROCEDURE IF EXISTS AgregarProyecto;
+DROP PROCEDURE IF EXISTS sp_RegistrarProyecto;
 GO
+DBCC CHECKIDENT ('proyecto', RESEED, 0);
 
-CREATE PROCEDURE AgregarProyecto
-	@Id_cliente INT,
-	@Id_asesor INT,
-	@Fecha_de_inicio DATE,
-	@Estado VARCHAR(50),
-	@Monto DECIMAL(12,2),
-	@Descuento DECIMAL(12,2),
-	@Fecha_de_entrega DATE
+CREATE PROCEDURE sp_RegistrarProyecto
+(
+    @Id_cliente INT,
+    @Id_asesor INT,
+    @Monto DECIMAL(12,2),
+    @Descuento DECIMAL(12,2),
+    @Fecha_entrega DATE
+)
 AS
 BEGIN
-	INSERT INTO	proyecto(Id_cliente,Id_asesor,Fecha_de_inicio,Estado,Monto,Descuento,Fecha_de_entrega)
-	VALUES(@Id_cliente,@Id_asesor,@Fecha_de_inicio,@Estado,@Monto,@Descuento,@Fecha_de_entrega)
-END;
 
-EXEC AgregarProyecto 1,11,'2026-01-10','Finalizado',1800000,10,'2026-02-15';
+BEGIN TRY
 
-EXEC AgregarProyecto 2,12,'2026-01-18','En proceso',2400000,5,'2026-03-20';
+    BEGIN TRANSACTION
 
-EXEC AgregarProyecto 3,13,'2026-02-01','Pendiente',980000,0,'2026-04-01';
+    INSERT INTO proyecto
+    (
+        Id_cliente,
+        Id_asesor,
+        Fecha_de_inicio,
+        Estado,
+        Monto,
+        Descuento,
+        Fecha_de_entrega
+    )
+    VALUES
+    (
+        @Id_cliente,
+        @Id_asesor,
+        GETDATE(),
+        'Pendiente',
+        @Monto,
+        @Descuento,
+        @Fecha_entrega
+    )
 
-EXEC AgregarProyecto 4,14,'2026-02-12','Finalizado',1470000,15,'2026-03-05';
+    COMMIT TRANSACTION
 
-EXEC AgregarProyecto 5,15,'2026-03-01','En proceso',1950000,8,'2026-04-15';
+    PRINT 'Proyecto registrado correctamente'
+
+END TRY
+
+BEGIN CATCH
+
+    IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION
+
+    PRINT 'Error al registrar proyecto'
+
+    PRINT ERROR_MESSAGE()
+
+END CATCH
+
+END
+GO
 
 
+EXEC sp_RegistrarProyecto
+    @Id_cliente = 1,
+    @Id_asesor = 11,
+    @Monto = 770000,
+    @Descuento = 0,
+    @Fecha_entrega = '2026-07-15';
+
+EXEC sp_RegistrarProyecto
+    @Id_cliente = 2,
+    @Id_asesor = 12,
+    @Monto = 1430000,
+    @Descuento = 50000,
+    @Fecha_entrega = '2026-08-01';
+
+EXEC sp_RegistrarProyecto
+    @Id_cliente = 3,
+    @Id_asesor = 11,
+    @Monto = 1750000,
+    @Descuento = 100000,
+    @Fecha_entrega = '2026-08-10';
+
+EXEC sp_RegistrarProyecto
+    @Id_cliente = 4,
+    @Id_asesor = 13,
+    @Monto = 1470000,
+    @Descuento = 70000,
+    @Fecha_entrega = '2026-07-30';
+
+EXEC sp_RegistrarProyecto
+    @Id_cliente = 5,
+    @Id_asesor = 12,
+    @Monto = 1950000,
+    @Descuento = 150000,
+    @Fecha_entrega = '2026-08-20';
 SELECT*FROM proyecto
+
+UPDATE proyecto -----para cambiar el estado del proyecto cuando se haya hecho la entrega
+SET Estado = 'Finalizado'
+WHERE Id_proyecto IN (40,50);
+
 
 
 -- =========================
@@ -264,6 +371,7 @@ BEGIN
 
 END;
 
+
 EXEC AgregarInteraccion 1,11,'2026-01-05','WhatsApp','Consulta inicial','Interesado';
 
 EXEC AgregarInteraccion 2,12,'2026-01-08','Email','Envio presupuesto','En negociacion';
@@ -272,7 +380,8 @@ EXEC AgregarInteraccion 3,13,'2026-01-15','Telefono','Consulta cocina','Interesa
 
 EXEC AgregarInteraccion 4,14,'2026-01-28','WhatsApp','Solicita descuento','Pendiente';
 
-EXEC AgregarInteraccion 5,15,'2026-02-05','Presencial','Firma contrato','Cerrada';
+EXEC AgregarInteraccion 5,15,'2026-02-05','Presencial','Venta concretada','Cerrada';
+
 
 SELECT*FROM Interaccion
 
@@ -295,15 +404,16 @@ BEGIN
 
 END;
 
-EXEC AgregarEntrega 10,'2026-05-12','2026-05-15','Riobamba 510','Pendiente';
+INSERT INTO entrega
+(Id_proyecto, fecha_programada, fecha_real, direccion_entrega, estado)
+VALUES
+(10, '2026-07-10', NULL, 'Av Rivadavia 123', 'Pendiente'),
+(20, '2026-07-25', NULL, 'San Martin 456', 'Pendiente'),
+(30, '2026-08-05', NULL, 'Belgrano 789', 'Pendiente'),
+(40, '2026-07-28', '2026-07-30', 'Cabildo 321', 'Completada'),
+(50, '2026-08-18', '2026-08-20', 'Mitre 654', 'Completada');
 
-EXEC AgregarEntrega 20,'2026-05-02','2026-05-04','Rivadavia 3100','Pendiente';
 
-EXEC AgregarEntrega 30,'2026-04-16','2026-04-19','Callao 300','Completada';
-
-EXEC AgregarEntrega 40,'2026-06-24','2026-06-29','Corrientes 1200','Cancelada';
-
-EXEC AgregarEntrega 50,'2026-05-06','2026-05-09','Belgrano 201','Completada';
 
 SELECT*FROM entrega
 
@@ -327,15 +437,13 @@ BEGIN
 
 END;
 
-EXEC AgregarEncuesta 10,'2026-02-20',9,'Muy conforme','SI';
+INSERT INTO encuesta
+(Id_proyecto, Fecha_encuesta, Puntuacion, Comentarios, Volveria_a_comprar)
+VALUES
+(40, '2026-08-02', 9, 'Muy conforme con la instalacion', 'SI'),
 
-EXEC AgregarEncuesta 20,'2026-03-25',7,'Buena atencion','SI';
+(50, '2026-08-25', 10, 'Excelente atencion y calidad', 'SI');
 
-EXEC AgregarEncuesta 30,'2026-04-05',6,'Demora en entrega','NO';
-
-EXEC AgregarEncuesta 40,'2026-03-10',10,'Excelente servicio','SI';
-
-EXEC AgregarEncuesta 50,'2026-04-20',8,'Buen resultado','SI';
 
 SELECT*FROM encuesta
 
@@ -457,64 +565,6 @@ BEGIN
 END
 GO
 
--- PROCEDURE CON TRY/CATCH
----------------------------------------------------
-
-CREATE PROCEDURE sp_RegistrarProyecto
-(
-    @Id_cliente INT,
-    @Id_asesor INT,
-    @Monto DECIMAL(12,2),
-    @Descuento DECIMAL(12,2),
-    @Fecha_entrega DATE
-)
-AS
-BEGIN
-
-BEGIN TRY
-
-    BEGIN TRANSACTION
-
-    INSERT INTO proyecto
-    (
-        Id_cliente,
-        Id_asesor,
-        Fecha_de_inicio,
-        Estado,
-        Monto,
-        Descuento,
-        Fecha_de_entrega
-    )
-    VALUES
-    (
-        @Id_cliente,
-        @Id_asesor,
-        GETDATE(),
-        'Pendiente',
-        @Monto,
-        @Descuento,
-        @Fecha_entrega
-    )
-
-    COMMIT TRANSACTION
-
-    PRINT 'Proyecto registrado correctamente'
-
-END TRY
-
-BEGIN CATCH
-
-    IF @@TRANCOUNT > 0
-        ROLLBACK TRANSACTION
-
-    PRINT 'Error al registrar proyecto'
-
-    PRINT ERROR_MESSAGE()
-
-END CATCH
-
-END
-GO
 
 ---------------------------------------------------
 -- PRUEBA DEL PROCEDURE
@@ -537,59 +587,199 @@ FROM proyecto;
 ---  CONSULTAS Y SUB CONSULTAS DE CLIENTE
 ---===========================================
 
----TELEFONO, GMAIL Y WHATSAPP---
-DROP TABLE IF EXISTS telefonos;
+SELECT
+    c.NombreC,
+    c.ApellidoC,
+    p.Id_proyecto,
+    p.Estado,
+    a.NombreA AS Nombre_Asesor,
+    a.ApellidoA AS Apellido_Asesor
+FROM cliente AS c
+JOIN proyecto AS p
+    ON c.Id_cliente = p.Id_cliente
+JOIN asesor AS a
+    ON p.Id_asesor = a.Id_asesor;
 
-SELECT*
-INTO telefonos
+
+SELECT
+    p.Id_proyecto,
+    p.Estado,
+    e.fecha_programada,
+    e.fecha_real,
+    e.estado AS Estado_Entrega
+FROM proyecto AS p
+JOIN entrega AS e
+    ON p.Id_proyecto = e.Id_proyecto;
+
+
+SELECT
+    p.Id_proyecto,
+    en.Puntuacion,
+    en.Comentarios,
+    en.Fecha_encuesta
+FROM proyecto AS p
+JOIN encuesta AS en
+    ON p.Id_proyecto = en.Id_proyecto;
+
+
+SELECT
+    c.NombreC,
+    c.ApellidoC,
+    i.Fecha_Interaccion,
+    i.Medio,
+    i.Comentarios
+FROM cliente AS c
+JOIN Interaccion AS i
+    ON c.Id_cliente = i.Id_cliente;
+
+
+SELECT
+    p.Id_proyecto,
+    d.Tipo,
+    d.Nombre_archivo,
+    d.Fecha_de_carga
+FROM proyecto AS p
+JOIN documentacion AS d
+    ON p.Id_proyecto = d.Id_proyecto;
+
+
+SELECT
+    p.Id_proyecto,
+    pr.NombreP,
+    dp.Cantidad,
+    dp.Observaciones_tecnicas
+FROM proyecto AS p
+JOIN detalle_proyecto AS dp
+    ON p.Id_proyecto = dp.Id_proyecto
+JOIN producto AS pr
+    ON dp.Id_producto = pr.Id_producto;
+
+
+-- CONSULTAS CON GROUP BY:
+
+SELECT
+    Estado,
+    COUNT(*) AS Cantidad_Proyectos
+FROM proyecto
+GROUP BY Estado;
+
+
+SELECT
+    Medio_de_contacto,
+    COUNT(*) AS Cantidad_Clientes
 FROM cliente
-WHERE Medio_de_contacto='Telefono';
+GROUP BY Medio_de_contacto;
 
-DROP TABLE IF EXISTS WhatsApp;
 
-SELECT*
-INTO WhatsApp
+SELECT
+    Id_asesor,
+    COUNT(*) AS Cantidad_Proyectos
+FROM proyecto
+GROUP BY Id_asesor;
+
+
+SELECT
+    Id_asesor,
+    SUM(Monto) AS Total_Vendido
+FROM proyecto
+GROUP BY Id_asesor;
+
+
+SELECT
+    Tipo,
+    COUNT(*) AS Cantidad_Documentos
+FROM documentacion
+GROUP BY Tipo;
+
+
+
+-- CONSULTAS CON HAVING:
+
+SELECT
+    Id_asesor,
+    COUNT(*) AS Cantidad_Proyectos
+FROM proyecto
+GROUP BY Id_asesor
+HAVING COUNT(*) > 2;
+
+
+SELECT
+    Estado,
+    COUNT(*) AS Cantidad
+FROM proyecto
+GROUP BY Estado
+HAVING COUNT(*) > 1;
+
+
+SELECT
+    Id_asesor,
+    SUM(Monto) AS Total_Vendido
+FROM proyecto
+GROUP BY Id_asesor
+HAVING SUM(Monto) > 2000000;
+
+
+SELECT
+    Tipo,
+    COUNT(*) AS Cantidad
+FROM documentacion
+GROUP BY Tipo
+HAVING COUNT(*) > 1;
+
+
+SELECT
+    Medio_de_contacto,
+    COUNT(*) AS Cantidad
 FROM cliente
-WHERE Medio_de_contacto='WhatsApp';
+GROUP BY Medio_de_contacto
+HAVING COUNT(*) > 1;
 
-DROP TABLE IF EXISTS Email;
 
-SELECT*
-INTO Email
+
+-- SUBCONSULTA ESCALAR:
+
+SELECT *
+FROM proyecto
+WHERE Monto >
+(
+    SELECT AVG(Monto)
+    FROM proyecto
+);
+
+
+
+-- SUBCONSULTA CON IN:
+
+SELECT *
 FROM cliente
-WHERE Medio_de_contacto='Email';
+WHERE Id_cliente IN
+(
+    SELECT Id_cliente
+    FROM proyecto
+);
 
-SELECT*FROM telefonos
-SELECT*FROM WhatsApp
-SELECT*FROM Email
 
-----ID MAS ALTO Y MAS BAJO----
 
-SELECT NombreC, ApellidoC
-FROM cliente
-WHERE Id_cliente=(
-	SELECT Max(Id_cliente)
-	FROM cliente);
+-- SUBCONSULTA CON EXISTS:
 
-SELECT NombreC, ApellidoC
-FROM cliente
-WHERE Id_cliente=(
-	SELECT Min(Id_cliente)
-	FROM cliente);
+SELECT *
+FROM cliente AS c
+WHERE EXISTS
+(
+    SELECT 1
+    FROM Interaccion AS i
+    WHERE i.Id_cliente = c.Id_cliente
+);
 
-----ORDEN ALFABETICO----
-DROP TABLE IF EXISTS orden;
 
-SELECT NombreC,ApellidoC,TelefonoC
-INTO orden
-FROM cliente;
 
-SELECT*
-FROM orden
-ORDER BY NombreC ASC;
+-- SUBCONSULTA CORRELACIONADA:
 
-----DIRECCION EN ORACIONES-----
-
-SELECT CONCAT_WS(' ',NombreC,ApellidoC,'vive en',DireccionC) AS Direccion
-FROM cliente;
-
+SELECT *
+FROM proyecto AS p1
+WHERE Monto >
+(
+    SELECT AVG(Monto)
+    FROM proyecto AS p2
+    WHERE p1.Id_asesor = p2.Id_asesor
+);
