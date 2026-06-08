@@ -838,7 +838,9 @@ JOIN asesor a
 
 ------------VISTAS----
 --- VISTA 1: Proyectos con cliente y asesor----
-
+DROP VIEW IF EXISTS vw_Proyectos_Detalle
+GO
+	
 CREATE VIEW vw_Proyectos_Detalle AS
 SELECT
     p.Id_proyecto,
@@ -926,6 +928,9 @@ SELECT * FROM vw_Ventas_Por_Asesor;
 
 
 ----INSERCION COMPLEJA 
+DROP PROCEDURE IF EXISTS sp_RegistrarProyectoCompleto
+GO
+	
 CREATE PROCEDURE sp_RegistrarProyectoCompleto
     @Id_cliente INT,
     @Id_asesor INT,
@@ -993,7 +998,9 @@ EXEC sp_RegistrarProyectoCompleto
 SELECT * FROM Interaccion;
 
 ---- Consulta parametrizada de entregas
-
+DROP PROCEDURE IF EXISTS sp_EntregasPorEstado
+GO
+	
 CREATE PROCEDURE sp_EntregasPorEstado
     @Estado VARCHAR(50)
 AS
